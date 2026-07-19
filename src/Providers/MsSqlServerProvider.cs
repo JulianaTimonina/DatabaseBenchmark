@@ -12,7 +12,9 @@ public class MsSqlServerProvider : IConnectionProvider {
 
     public IDbConnection CreateConnection() => new SqlConnection(_connectionString);
 
-    public string GetExplainQuery(string query) => $"SET SHOWPLAN_XML ON; {query}; SET SHOWPLAN_XML OFF;";
+    public string GetExplainQuery(string query) => query;
+
+    public string GetPlanPrefix() => "SET SHOWPLAN_XML ON;";
 
     public async Task ClearCacheAsync(IDbConnection connection) {
         try {

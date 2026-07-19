@@ -122,8 +122,23 @@ public class BenchmarkRunner {
 
     private async Task SaveExecutionPlanAsync(IConnectionProvider provider, IDbConnection conn, string queryName, string query, int datasetSize) {
         try {
+            // Открываем отдельное соединение для сбора плана,
+            // чтобы не влиять на состояние основного соединения бенчмарка
+            using var planConn = provider.CreateConnection();
+            planConn.Open();
+
+            // Выполняем префикс плана как отдельную команду (например, SET SHOWPLAN_XML ON для MSSQL)
+            // Это гарантирует, что SET SHOWPLAN будет единственной инструкцией в пакете
+            string planPrefix = provider.GetPlanPrefix();
+            if (!string.IsNullOrEmpty(planPrefix)) {
+                using var prefixCmd = planConn.CreateCommand();
+                prefixCmd.CommandText = planPrefix;
+                prefixCmd.ExecuteNonQuery();
+            }
+
+            // Выполняем запрос для получения плана
             string explainQuery = provider.GetExplainQuery(query);
-            using var cmd = conn.CreateCommand();
+            using var cmd = planConn.CreateCommand();
             cmd.CommandText = explainQuery;
 
             using var reader = cmd.ExecuteReader();

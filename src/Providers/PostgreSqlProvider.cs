@@ -14,6 +14,8 @@ public class PostgreSqlProvider : IConnectionProvider {
 
     public string GetExplainQuery(string query) => $"EXPLAIN (FORMAT JSON) {query}";
 
+    public string GetPlanPrefix() => "";
+
     public async Task ClearCacheAsync(IDbConnection connection) {
         using var cmd = new NpgsqlCommand("DISCARD ALL; CHECKPOINT; SELECT pg_stat_reset();", (NpgsqlConnection)connection);
         await cmd.ExecuteNonQueryAsync();
