@@ -12,7 +12,7 @@ public class PostgreSqlProvider : IConnectionProvider {
 
     public IDbConnection CreateConnection() => new NpgsqlConnection(_connectionString);
 
-    public string GetExplainQuery(string query) => $"EXPLAIN (FORMAT JSON, ANALYZE) {query}";
+    public string GetExplainQuery(string query) => $"EXPLAIN (FORMAT JSON) {query}";
 
     public async Task ClearCacheAsync(IDbConnection connection) {
         using var cmd = new NpgsqlCommand("DISCARD ALL; CHECKPOINT; SELECT pg_stat_reset();", (NpgsqlConnection)connection);

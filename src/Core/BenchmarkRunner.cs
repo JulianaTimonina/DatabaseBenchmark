@@ -106,8 +106,8 @@ public class BenchmarkRunner {
         };
         SaveResultToCsv(result);
 
-        // --- ШАГ 6. Сбор и сохранение плана выполнения (EXPLAIN ANALYZE / Execution Plan) ---
-        SaveExecutionPlan(provider, conn, queryName, query, datasetSize);
+        // --- ШАГ 6. Сбор и сохранение плана выполнения (план без выполнения запроса) ---
+        await SaveExecutionPlanAsync(provider, conn, queryName, query, datasetSize);
     }
 
     private void SaveResultToCsv(ExperimentResult result) {
@@ -115,12 +115,12 @@ public class BenchmarkRunner {
 
         using var writer = new StreamWriter(_csvPath, true);
         if (writeHeader) {
-            writer.WriteLine("Database,Driver,QueryName,DatasetSize,ReturnedRows,MinMs,MaxMs,AvgMs,MedianMs,StdDevMs");
+            writer.WriteLine("Database;Driver;QueryName;DatasetSize;ReturnedRows;MinMs;MaxMs;AvgMs;MedianMs;StdDevMs");
         }
-        writer.WriteLine($"{result.Database},{result.Driver},{result.QueryName},{result.DatasetSize},{result.ReturnedRows},{result.MinMs:F4},{result.MaxMs:F4},{result.AvgMs:F4},{result.MedianMs:F4},{result.StdDevMs:F4}");
+        writer.WriteLine($"{result.Database};{result.Driver};{result.QueryName};{result.DatasetSize};{result.ReturnedRows};{result.MinMs:F4};{result.MaxMs:F4};{result.AvgMs:F4};{result.MedianMs:F4};{result.StdDevMs:F4}");
     }
 
-    private void SaveExecutionPlan(IConnectionProvider provider, IDbConnection conn, string queryName, string query, int datasetSize) {
+    private async Task SaveExecutionPlanAsync(IConnectionProvider provider, IDbConnection conn, string queryName, string query, int datasetSize) {
         try {
             string explainQuery = provider.GetExplainQuery(query);
             using var cmd = conn.CreateCommand();
@@ -129,7 +129,16 @@ public class BenchmarkRunner {
             using var reader = cmd.ExecuteReader();
             string planText = "";
             while (reader.Read()) {
-                planText += reader.GetValue(0)?.ToString() + Environment.NewLine;
+                string? value = reader.GetValue(0)?.ToString();
+                if (!string.IsNullOrEmpty(value)) {
+                    planText += value + Environment.NewLine;
+                }
+            }
+
+            // Если план пустой — возможно, SHOWPLAN_XML вернул NULL (неподдерживаемый запрос)
+            if (string.IsNullOrWhiteSpace(planText)) {
+                Console.WriteLine("  [!] План запроса пуст (возможно, запрос не поддерживает получение плана).");
+                return;
             }
 
             // Формируем имя файла плана без пробелов и спецсимволов
@@ -137,7 +146,7 @@ public class BenchmarkRunner {
             string fileName = $"{safeDbName}_{queryName}_{datasetSize}_plan.txt";
             string planPath = Path.Combine(_plansDir, fileName);
 
-            File.WriteAllText(planPath, planText);
+            await File.WriteAllTextAsync(planPath, planText);
             Console.WriteLine($"  -> [План сохранен]: results/plans/{fileName}");
         }
         catch (Exception ex) {
