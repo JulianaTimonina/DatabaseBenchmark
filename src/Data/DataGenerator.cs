@@ -55,6 +55,13 @@ public class DataGenerator {
             writer.Complete();
         }
         Console.WriteLine("[Генератор] Связи UserRoles импортированы в PostgreSQL.");
+
+        // 3. Обновление статистики для оптимизатора PostgreSQL
+        using (var analyzeCmd = conn.CreateCommand()) {
+            analyzeCmd.CommandText = "ANALYZE;";
+            analyzeCmd.ExecuteNonQuery();
+        }
+        Console.WriteLine("[Генератор] Статистика оптимизатора обновлена (ANALYZE).");
     }
 
     private void GenerateMsSqlServer(SqlConnection conn, int count) {
