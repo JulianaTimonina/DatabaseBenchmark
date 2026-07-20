@@ -8,4 +8,5 @@ CREATE TABLE UserRoles (UserId INT, RoleId INT, PRIMARY KEY(UserId, RoleId));
 
 -- Индексы для производительности JOIN и WHERE
 CREATE INDEX IX_Users_Name ON Users(Name);
+CREATE INDEX IX_UserRoles_UserId ON UserRoles(UserId);
 CREATE INDEX IX_UserRoles_RoleId ON UserRoles(RoleId);
