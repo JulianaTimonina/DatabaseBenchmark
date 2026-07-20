@@ -51,12 +51,15 @@ class Program {
                   INNER JOIN Roles r ON ur.RoleId = r.Id 
                   WHERE u.Id BETWEEN 1000 AND 5000;" 
             },
-            { 
-                "GROUP_BY_Aggregate", 
-                @"SELECT r.Name AS RoleName, COUNT(ur.UserId) AS UserCount 
-                  FROM Roles r 
-                  LEFT JOIN UserRoles ur ON r.Id = ur.RoleId 
-                  GROUP BY r.Name;" 
+            {
+                "GROUP_BY_Aggregate",
+                @"SELECT (u.Id / 1000) * 1000 AS RangeStart,
+                        (u.Id / 1000) * 1000 + 999 AS RangeEnd,
+                        COUNT(ur.RoleId) AS TotalRoles
+                  FROM Users u
+                  LEFT JOIN UserRoles ur ON u.Id = ur.UserId
+                  GROUP BY u.Id / 1000
+                  ORDER BY RangeStart;"
             }
         };
 

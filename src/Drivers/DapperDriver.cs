@@ -11,8 +11,4 @@ public class DapperDriver : IDbDriver {
        var result = await connection.QueryAsync<T>(query);
         return result.ToList(); // Материализуем в список
     }
-
-    public void GetExecutionPlan(IDbConnection connection, string query, string outputPath) {
-        // Получение плана делегировано в BenchmarkRunner через GetExplainQuery у ConnectionProvider-а
-    }
 }

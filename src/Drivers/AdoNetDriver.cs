@@ -35,11 +35,6 @@ public class AdoNetDriver : IDbDriver {
         return results;
     }
 
-    public void GetExecutionPlan(IDbConnection connection, string query, string outputPath) {
-        // Логика получения планов вынесена в BenchmarkRunner,
-        // поэтому здесь оставляем метод пустым.
-    }
-
     /// <summary>
     /// Маппинг строки из IDataReader в объект типа T через рефлексию.
     /// Позволяет AdoNetDriver выполнять ту же работу по материализации данных,

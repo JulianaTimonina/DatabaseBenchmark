@@ -121,19 +121,22 @@ public class BenchmarkRunner {
     }
 
     private async Task SaveExecutionPlanAsync(IConnectionProvider provider, IDbConnection conn, string queryName, string query, int datasetSize) {
-        try {
-            // Открываем отдельное соединение для сбора плана,
-            // чтобы не влиять на состояние основного соединения бенчмарка
-            using var planConn = provider.CreateConnection();
-            planConn.Open();
+        // Открываем отдельное соединение для сбора плана,
+        // чтобы не влиять на состояние основного соединения бенчмарка
+        using var planConn = provider.CreateConnection();
+        planConn.Open();
 
+        string planPrefix = provider.GetPlanPrefix();
+        bool planModeEnabled = false;
+
+        try {
             // Выполняем префикс плана как отдельную команду (например, SET SHOWPLAN_XML ON для MSSQL)
             // Это гарантирует, что SET SHOWPLAN будет единственной инструкцией в пакете
-            string planPrefix = provider.GetPlanPrefix();
             if (!string.IsNullOrEmpty(planPrefix)) {
                 using var prefixCmd = planConn.CreateCommand();
                 prefixCmd.CommandText = planPrefix;
                 prefixCmd.ExecuteNonQuery();
+                planModeEnabled = true;
             }
 
             // Выполняем запрос для получения плана
@@ -166,6 +169,19 @@ public class BenchmarkRunner {
         }
         catch (Exception ex) {
             Console.WriteLine($"  [!] Ошибка сбора плана запроса: {ex.Message}");
+        }
+        finally {
+            // Гарантированно отключаем режим плана, чтобы не сломать соединение
+            if (planModeEnabled) {
+                try {
+                    using var offCmd = planConn.CreateCommand();
+                    offCmd.CommandText = "SET SHOWPLAN_XML OFF;";
+                    offCmd.ExecuteNonQuery();
+                }
+                catch {
+                    // Игнорируем ошибку отключения — соединение всё равно будет закрыто using-ом
+                }
+            }
         }
     }
 }

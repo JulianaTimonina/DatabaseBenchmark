@@ -5,3 +5,7 @@ DROP TABLE IF EXISTS Roles;
 CREATE TABLE Users (Id SERIAL PRIMARY KEY, Name VARCHAR(255));
 CREATE TABLE Roles (Id SERIAL PRIMARY KEY, Name VARCHAR(50));
 CREATE TABLE UserRoles (UserId INT, RoleId INT, PRIMARY KEY(UserId, RoleId));
+
+-- Индексы для производительности JOIN и WHERE
+CREATE INDEX IX_Users_Name ON Users(Name);
+CREATE INDEX IX_UserRoles_RoleId ON UserRoles(RoleId);

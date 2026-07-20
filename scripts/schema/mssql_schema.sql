@@ -5,3 +5,7 @@ IF OBJECT_ID('Roles', 'U') IS NOT NULL DROP TABLE Roles;
 CREATE TABLE Users (Id INT IDENTITY(1,1) PRIMARY KEY, Name NVARCHAR(255));
 CREATE TABLE Roles (Id INT IDENTITY(1,1) PRIMARY KEY, Name NVARCHAR(50));
 CREATE TABLE UserRoles (UserId INT, RoleId INT, PRIMARY KEY(UserId, RoleId));
+
+-- Индексы для производительности JOIN и WHERE
+CREATE INDEX IX_Users_Name ON Users(Name);
+CREATE INDEX IX_UserRoles_RoleId ON UserRoles(RoleId);
